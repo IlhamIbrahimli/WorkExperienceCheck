@@ -107,7 +107,7 @@ async def check_link(id: int, x_secret_key: str = Header(None)):#
             supabase.table("experience").update({"webHash": webHash,"lastCheck": ts}).eq("id", id).execute()
             requests.post(os.environ.get("NOTIFY_LINK"), data=f"{links[-1]["name"]} role website status changed! You must apply in {links[-1]["yearToApply"]}".encode(encoding='utf-8'))
         
-@app.get("/keepup")
+@app.head("/keepup")
 async def keepUp():
     return {"I'm alive"}
         
