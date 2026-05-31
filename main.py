@@ -2,7 +2,6 @@ from fastapi import FastAPI, Request, Form, Response, Depends, HTTPException, st
 from fastapi.templating import Jinja2Templates
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import secrets
-from pydantic import BaseModel
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import os
@@ -11,8 +10,6 @@ from bs4 import BeautifulSoup
 import hashlib
 import datetime
 from playwright.async_api import async_playwright
-
-
 
 load_dotenv()
 security = HTTPBasic()
@@ -27,7 +24,7 @@ def authenticate(credentials: HTTPBasicCredentials = Depends(security)):
         )
 
 
-app = FastAPI()
+app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 templates = Jinja2Templates(directory="templates")
 
 #supabase connection
@@ -65,17 +62,8 @@ async def get_links(request: Request,credentials: HTTPBasicCredentials = Depends
     return templates.TemplateResponse(request=request, name="index.html", context={"request": request, "urls": experiences})
 
 @app.get("/")
-async def home(request: Request):
+async def home(request: Request,credentials: HTTPBasicCredentials = Depends(authenticate)):
     return await get_links(request)
-
-
-## adding links
-class Link(BaseModel):
-    name: str
-    link: str
-    yearToApply: str
-
-
 
 
 @app.post("/add_link")
