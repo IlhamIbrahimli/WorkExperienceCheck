@@ -79,11 +79,19 @@ async def do_check(id: int):
             supabase.table("experience").update({"webHash": webHash,"lastCheck": ts}).eq("id", id).execute()
             requests.post(os.environ.get("NOTIFY_LINK"), data=f"{links[-1]["name"]} role website status changed! You must apply in {links[-1]["yearToApply"]}".encode(encoding='utf-8'))
 
+def format_ts(ts: str) -> str:
+    if not ts:
+        return "—"
+    dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    return dt.strftime("%d %b %Y, %H:%M")
+
+
 @app.get("/links")
 async def get_links(request: Request,credentials: HTTPBasicCredentials = Depends(authenticate)):
     response = supabase.table("experience").select("*").execute()
     experiences = response.data
-
+    for experience in experiences:
+        experience["lastCheck"] = format_ts(experience["lastCheck"])
     return templates.TemplateResponse(request=request, name="index.html", context={"request": request, "urls": experiences})
 
 @app.get("/")
@@ -96,6 +104,7 @@ async def add_link(request: Request, name: str = Form(), link: str = Form(), whe
     response = supabase.table("experience").insert({"name": name, "link":link, "yearToApply": whenToApply}).execute()
     # return the _row.html partial, not the full page
     await check_link(response.data[0]["id"], x_secret_key=os.environ.get("CRON_SECRET"))
+    response.data[0]["lastCheck"] = format_ts(response.data[0]["lastCheck"])
     return templates.TemplateResponse(request=Request, name="_row.html", context={"request": request, "url": response.data[0]})
 
 

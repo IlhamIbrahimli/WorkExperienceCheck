@@ -5,7 +5,7 @@
     <a href="{{ url.link }}" target="_blank" rel="noopener">{{ url.link }}</a>
   </td>
   <td class="td-mono">{{ url.yearToApply or '—' }}</td>
-  <td class="td-mono">{{ url.lastChecked or '—' }}</td>
+  <td class="td-mono">{{ url.lastChecked | format_ts }}</td>
   <td class="td-actions">
     <button
       class="btn-delete"
