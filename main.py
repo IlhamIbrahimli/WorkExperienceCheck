@@ -36,7 +36,8 @@ async def get_page_hash(url: str) -> str:
     async with async_playwright() as p:
         browser = await p.chromium.launch(
             headless=True,
-            args=["--no-sandbox", "--disable-dev-shm-usage"]
+            args=["--no-sandbox", "--disable-dev-shm-usage","--disable-gpu",
+        "--single-process"]
         )
         page = await browser.new_page()
         await page.goto(url)
