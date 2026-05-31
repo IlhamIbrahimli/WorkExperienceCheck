@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Form, Response, Depends, HTTPException, status, Header
+from fastapi import FastAPI, Request, Form, Response, Depends, HTTPException, status, Header, BackgroundTasks
 from fastapi.templating import Jinja2Templates
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import secrets
@@ -57,6 +57,28 @@ async def get_page_hash(url: str) -> str:
     text = soup.get_text(separator=" ", strip=True)
     return hashlib.sha256(text.encode()).hexdigest()
 
+async def do_check(id: int):
+    response = supabase.table("experience").select("id, name, link, webHash, yearToApply").execute()
+    links = response.data
+    if id == 0:
+        for i in range(len(links)):
+            ts =datetime.datetime.now().isoformat()
+            webHash = await get_page_hash(links[i]["link"])
+            if links[i]["webHash"] == "":
+                supabase.table("experience").update({"webHash": webHash,"lastCheck": ts}).eq("id", links[i]["id"]).execute()
+            elif links[i]["webHash"] != webHash:
+                supabase.table("experience").update({"webHash": webHash,"lastCheck": ts}).eq("id", links[i]["id"]).execute()
+                requests.post(os.environ.get("NOTIFY_LINK"), data=f"{links[i]["name"]} role website status changed! You must apply in {links[i]["yearToApply"]}".encode(encoding='utf-8'))
+    else:
+        ts = datetime.datetime.now().isoformat()
+        print(links)
+        webHash = await get_page_hash(links[-1]["link"]) ## Will always be checking the last (most recent one)
+        if links[-1]["webHash"] == "":
+            supabase.table("experience").update({"webHash": webHash,"lastCheck": ts}).eq("id", id).execute()
+        elif links[-1]["webHash"] != webHash:
+            supabase.table("experience").update({"webHash": webHash,"lastCheck": ts}).eq("id", id).execute()
+            requests.post(os.environ.get("NOTIFY_LINK"), data=f"{links[-1]["name"]} role website status changed! You must apply in {links[-1]["yearToApply"]}".encode(encoding='utf-8'))
+
 @app.get("/links")
 async def get_links(request: Request,credentials: HTTPBasicCredentials = Depends(authenticate)):
     response = supabase.table("experience").select("*").execute()
@@ -83,29 +105,11 @@ async def delete_link(request: Request,url_id: int, credentials: HTTPBasicCreden
     return Response(status_code=200)
 
 @app.get("/check/{id}")
-async def check_link(id: int, x_secret_key: str = Header(None)):#
+async def check_link(id: int, x_secret_key: str = Header(None), background_tasks: BackgroundTasks = None):#
     if x_secret_key != os.environ.get("CRON_SECRET"):
         raise HTTPException(status_code=401, detail="Unauthorised")
-    response = supabase.table("experience").select("id, name, link, webHash, yearToApply").execute()
-    links = response.data
-    if id == 0:
-        for i in range(len(links)):
-            ts =datetime.datetime.now().isoformat()
-            webHash = await get_page_hash(links[i]["link"])
-            if links[i]["webHash"] == "":
-                supabase.table("experience").update({"webHash": webHash,"lastCheck": ts}).eq("id", links[i]["id"]).execute()
-            elif links[i]["webHash"] != webHash:
-                supabase.table("experience").update({"webHash": webHash,"lastCheck": ts}).eq("id", links[i]["id"]).execute()
-                requests.post(os.environ.get("NOTIFY_LINK"), data=f"{links[i]["name"]} role website status changed! You must apply in {links[i]["yearToApply"]}".encode(encoding='utf-8'))
-    else:
-        ts = datetime.datetime.now().isoformat()
-        print(links)
-        webHash = await get_page_hash(links[-1]["link"]) ## Will always be checking the last (most recent one)
-        if links[-1]["webHash"] == "":
-            supabase.table("experience").update({"webHash": webHash,"lastCheck": ts}).eq("id", id).execute()
-        elif links[-1]["webHash"] != webHash:
-            supabase.table("experience").update({"webHash": webHash,"lastCheck": ts}).eq("id", id).execute()
-            requests.post(os.environ.get("NOTIFY_LINK"), data=f"{links[-1]["name"]} role website status changed! You must apply in {links[-1]["yearToApply"]}".encode(encoding='utf-8'))
+    background_tasks.add_task(do_check, id)
+    return {"status": "check started"}
         
 @app.head("/keepup")
 async def keepUp():
