@@ -68,7 +68,7 @@ async def do_check(id: int):
                 supabase.table("experience").update({"webHash": webHash,"lastCheck": ts}).eq("id", links[i]["id"]).execute()
             elif links[i]["webHash"] != webHash:
                 supabase.table("experience").update({"webHash": webHash,"lastCheck": ts}).eq("id", links[i]["id"]).execute()
-                requests.post(os.environ.get("NOTIFY_LINK"), data=f"{links[i]["name"]} role website status changed! You must apply in {links[i]["yearToApply"]}".encode(encoding='utf-8'))
+                supabase.functions.invoke("send-push-notif", invoke_options={"body": {"message": f"{links[-1]["name"]} role website status changed! You must apply in {links[-1]["yearToApply"]}".encode(encoding='utf-8')}})
     else:
         ts = datetime.datetime.now().isoformat()
         print(links)
@@ -77,7 +77,7 @@ async def do_check(id: int):
             supabase.table("experience").update({"webHash": webHash,"lastCheck": ts}).eq("id", id).execute()
         elif links[-1]["webHash"] != webHash:
             supabase.table("experience").update({"webHash": webHash,"lastCheck": ts}).eq("id", id).execute()
-            requests.post(os.environ.get("NOTIFY_LINK"), data=f"{links[-1]["name"]} role website status changed! You must apply in {links[-1]["yearToApply"]}".encode(encoding='utf-8'))
+            supabase.functions.invoke("send-push-notif", invoke_options={"body": {"message": f"{links[-1]["name"]} role website status changed! You must apply in {links[-1]["yearToApply"]}".encode(encoding='utf-8')}})
 
 def format_ts(ts: str) -> str:
     if not ts:
