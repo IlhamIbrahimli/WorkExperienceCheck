@@ -10,6 +10,8 @@ from bs4 import BeautifulSoup
 import hashlib
 import datetime
 from playwright.async_api import async_playwright
+if os.getenv("RENDER"):
+    os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "/opt/render/project/src/.playwright"
 
 load_dotenv()
 security = HTTPBasic()
