@@ -82,7 +82,7 @@ async def do_check(id: int):
 def format_ts(ts: str) -> str:
     if not ts:
         return "—"
-    dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    dt = datetime.datetime.fromisoformat(ts.replace("Z", "+00:00"))
     return dt.strftime("%d %b %Y, %H:%M")
 
 
