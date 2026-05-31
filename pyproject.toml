@@ -1,0 +1,13 @@
+[project]
+name = "workexperience"
+version = "0.1.0"
+description = "Add work experience static sites here. It will check for updates and notify you through ntfy.sh"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "bs4>=0.0.2",
+    "fastapi>=0.136.3",
+    "pydantic>=2.13.4",
+    "python-dotenv>=1.2.2",
+    "supabase>=2.30.1",
+]

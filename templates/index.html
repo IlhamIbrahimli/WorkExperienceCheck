@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AppWatch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #0a0a0a;
+      --white: #f5f5f0;
+      --gray-1: #e8e8e3;
+      --gray-2: #b0b0a8;
+      --gray-3: #606058;
+      --border: 1.5px solid #0a0a0a;
+    }
+
+    body {
+      background: var(--white);
+      color: var(--black);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+    }
+
+    header {
+      border-bottom: var(--border);
+      padding: 0 48px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: var(--white);
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 0.12em;
+    }
+
+    .header-meta {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--gray-3);
+      letter-spacing: 0.05em;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 56px 48px 80px;
+    }
+
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gray-3);
+      margin-bottom: 20px;
+    }
+
+    .form-block {
+      border: var(--border);
+      padding: 36px 40px;
+      margin-bottom: 64px;
+      position: relative;
+    }
+
+    .form-block::before {
+      content: '+ NEW';
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 72px;
+      color: var(--gray-1);
+      position: absolute;
+      top: 16px;
+      right: 32px;
+      line-height: 1;
+      pointer-events: none;
+      letter-spacing: 0.04em;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gray-3);
+    }
+
+    .field input,
+    .field select {
+      background: transparent;
+      border: none;
+      border-bottom: var(--border);
+      padding: 10px 0;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--black);
+      outline: none;
+      width: 100%;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .field input::placeholder { color: var(--gray-2); }
+    .field input:focus,
+    .field select:focus { border-bottom-color: var(--black); }
+
+    .form-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn-primary {
+      background: var(--black);
+      color: var(--white);
+      border: var(--border);
+      padding: 12px 32px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-primary:hover {
+      background: var(--white);
+      color: var(--black);
+    }
+
+    .saving-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--gray-3);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .htmx-request .saving-text { opacity: 1; }
+
+    .table-wrapper {
+      border: var(--border);
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    thead th {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 400;
+      padding: 14px 20px;
+      text-align: left;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--gray-1);
+      transition: background 0.1s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--gray-1); }
+
+    tbody td {
+      padding: 16px 20px;
+      font-size: 13px;
+      font-weight: 300;
+      vertical-align: middle;
+    }
+
+    .td-id {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--gray-3);
+      width: 60px;
+    }
+
+    .td-name { font-weight: 500; }
+
+    .td-link a {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--black);
+      text-decoration: none;
+      border-bottom: 1px solid var(--gray-2);
+      transition: border-color 0.15s;
+      word-break: break-all;
+    }
+
+    .td-link a:hover { border-color: var(--black); }
+
+    .td-mono {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--gray-3);
+      white-space: nowrap;
+    }
+
+    .td-actions { width: 48px; text-align: right; }
+
+    .btn-delete {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--gray-2);
+      font-size: 18px;
+      line-height: 1;
+      padding: 4px;
+      transition: color 0.15s;
+    }
+    .btn-delete:hover { color: var(--black); }
+
+    .empty-state {
+      padding: 64px 20px;
+      text-align: center;
+    }
+
+    .empty-state p {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--gray-2);
+      letter-spacing: 0.08em;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">AppWatch</div>
+    <div class="header-meta">{{ urls|length }} URL{% if urls|length != 1 %}S{% endif %} MONITORED</div>
+  </header>
+
+  <main>
+
+    <div class="section-label">Add URL</div>
+    <div class="form-block">
+      <form
+        hx-post="/add_link"
+        hx-target="#url-table-body"
+        hx-swap="beforeend"
+        hx-on::after-request="this.reset()"
+      >
+        <div class="form-grid">
+          <div class="field">
+            <label for="name">Company / Name</label>
+            <input type="text" id="name" name="name" placeholder="Acme Corp" required>
+          </div>
+          <div class="field">
+            <label for="link">URL</label>
+            <input type="url" id="link" name="link" placeholder="https://acme.com/careers" required>
+          </div>
+          <div class="field">
+            <label for="whenToApply">When to Apply</label>
+            <select id="whenToApply" name="whenToApply">
+              <option value="ASAP">ASAP</option>
+              <option value="Year 12">Year 12</option>
+              <option value="Year 13">Year 13</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Add URL</button>
+          <span class="saving-text">Saving...</span>
+        </div>
+      </form>
+    </div>
+
+    <div class="section-label">Watched URLs</div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Link</th>
+            <th>When to Apply</th>
+            <th>Last Checked</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="url-table-body">
+          {% for url in urls %}
+            {% include "_row.html" %}
+          {% else %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <p>No URLs being watched yet — add one above.</p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+</body>
+</html>
