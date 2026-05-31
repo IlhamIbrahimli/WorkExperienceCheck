@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -229,5 +229,3 @@ wheels/
 # Virtual environments
 .venv
 .env
-
->>>>>>> 3d894ec (Should be finished)
